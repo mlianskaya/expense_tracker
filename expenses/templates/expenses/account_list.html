@@ -1,0 +1,28 @@
+{% extends 'expenses/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Мои счета</h2>
+    <a href="{% url 'expenses:account_add' %}" class="btn btn-success">+ Добавить счет</a>
+</div>
+
+<div class="row">
+    {% for account in account_list %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ account.name }}</h5>
+                <p class="card-text">
+                    Баланс: <strong>{{ account.balance }} {{ account.currency }}</strong><br>
+                    Создан: {{ account.created_at|date:"d.m.Y" }}
+                </p>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">У вас пока нет счетов. <a href="{% url 'expenses:account_add' %}">Создайте первый счет</a></div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -5,36 +5,52 @@
     <div class="col-md-8 mx-auto text-center">
         <h1>Добро пожаловать в Expense Tracker!</h1>
         <p class="lead">Управляйте вашими финансами легко и просто</p>
-        
-        <div class="row mt-5">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">💰 Счета</h5>
-                        <p class="card-text">Управляйте вашими счетами и балансами</p>
-                        <a href="{% url 'expenses:account_list' %}" class="btn btn-primary">Перейти к счетам</a>
+
+        {% if user.is_authenticated %}
+            <div class="alert alert-success mt-4">
+                <h4>Вы успешно вошли в систему!</h4>
+                <p>Теперь вы можете использовать все возможности приложения.</p>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">💰 Счета</h5>
+                            <p class="card-text">Управляйте вашими счетами и балансами</p>
+                            <a href="{% url 'expenses:account_list' %}" class="btn btn-primary">Перейти к счетам</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">📊 Транзакции</h5>
+                            <p class="card-text">Добавляйте и просматривайте доходы и расходы</p>
+                            <a href="{% url 'expenses:transaction_list' %}" class="btn btn-primary">Перейти к транзакциям</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">📂 Категории</h5>
+                            <p class="card-text">Настройте категории для сортировки транзакций</p>
+                            <a href="{% url 'expenses:category_list' %}" class="btn btn-primary">Перейти к категориям</a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">📊 Транзакции</h5>
-                        <p class="card-text">Добавляйте и просматривайте доходы и расходы</p>
-                        <a href="{% url 'expenses:transaction_list' %}" class="btn btn-primary">Перейти к транзакциям</a>
-                    </div>
+        {% else %}
+            <div class="alert alert-info mt-4">
+                <h4>Для начала работы необходимо войти в систему</h4>
+                <p>Если у вас еще нет аккаунта - зарегистрируйтесь!</p>
+                <div class="mt-3">
+                    <a href="{% url 'expenses:login' %}" class="btn btn-primary btn-lg me-3">Войти</a>
+                    <a href="{% url 'expenses:register' %}" class="btn btn-success btn-lg">Регистрация</a>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">📂 Категории</h5>
-                        <p class="card-text">Настройте категории для сортировки транзакций</p>
-                        <a href="{% url 'expenses:category_list' %}" class="btn btn-primary">Перейти к категориям</a>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

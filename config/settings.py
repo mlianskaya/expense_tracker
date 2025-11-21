@@ -107,3 +107,6 @@ LOGOUT_REDIRECT_URL = '/'  # После выхода перенаправлят�
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Настройки аутентификации
+LOGIN_URL = '/login/'

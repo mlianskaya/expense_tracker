@@ -1,8 +1,30 @@
-from django.shortcuts import render
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy
 from .models import Account, Category, Transaction, Budget
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.views import LoginView, LogoutView
+from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from .forms import CustomUserCreationForm
+
+# Кастомные представления для аутентификации
+class CustomLoginView(LoginView):
+    template_name = 'expenses/login.html'
+    redirect_authenticated_user = True
+
+class CustomLogoutView(LogoutView):
+    next_page = '/'
+
+def register(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)  # Автоматически входим после регистрации
+            return redirect('expenses:home')
+    else:
+        form = CustomUserCreationForm()
+    return render(request, 'expenses/register.html', {'form': form})
 
 # Account Views
 class AccountListView(LoginRequiredMixin, ListView):
