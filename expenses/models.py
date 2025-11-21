@@ -20,6 +20,26 @@ class Account(models.Model):
     def __str__(self):
         return f"{self.name} ({self.currency})"
 
+class Category(models.Model):
+    TYPE_INCOME = 'income'
+    TYPE_EXPENSE = 'expense'
+    TYPE_CHOICES = [
+        (TYPE_INCOME, 'Income'),
+        (TYPE_EXPENSE, 'Expense'),
+    ]
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    name = models.CharField(max_length=120)
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='children')
+
+    class Meta:
+        unique_together = ('owner', 'name', 'type')
+        ordering = ['name']
+
+    def str(self):
+        return self.name
+    
 class Transaction(models.Model):
     TYPE_INCOME = 'income'
     TYPE_EXPENSE = 'expense'
@@ -46,3 +66,61 @@ class Transaction(models.Model):
         if self.category and self.category.type != self.type:
             raise ValidationError("Тип транзакции должен соответствовать типу категории.")
 
+
+class Budget(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='budgets')
+    period_start = models.DateField(help_text='Первый день месяца')
+    limit_amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+
+    class Meta:
+        unique_together = ('owner', 'category', 'period_start')
+        ordering = ['-period_start']
+
+    def str(self):
+        return f"{self.category.name} — {self.period_start:%Y-%m} — {self.limit_amount}"
+
+# Сигналы для автоматического обновления баланса
+from django.db.models.signals import pre_save, post_save, post_delete
+from django.dispatch import receiver
+
+@receiver(pre_save, sender=Transaction)
+def transaction_pre_save(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._pre_save_old_amount = None
+        instance._pre_save_old_type = None
+    else:
+        try:
+            old = Transaction.objects.get(pk=instance.pk)
+            instance._pre_save_old_amount = old.amount
+            instance._pre_save_old_type = old.type
+            instance._pre_save_old_account = old.account
+        except Transaction.DoesNotExist:
+            instance._pre_save_old_amount = None
+            instance._pre_save_old_type = None
+
+@receiver(post_save, sender=Transaction)
+def transaction_post_save(sender, instance, created, **kwargs):
+    def apply_delta(account_obj, delta):
+        account_obj.balance = (account_obj.balance or Decimal('0.00')) + Decimal(delta)
+        account_obj.save(update_fields=['balance'])
+
+    if created:
+        delta = instance.amount if instance.type == Transaction.TYPE_INCOME else -instance.amount
+        apply_delta(instance.account, delta)
+    else:
+        old_amount = getattr(instance, '_pre_save_old_amount', None)
+        old_type = getattr(instance, '_pre_save_old_type', None)
+        old_account = getattr(instance, '_pre_save_old_account', None)
+        if old_amount is not None and old_type is not None and old_account is not None:
+            old_delta = old_amount if old_type == Transaction.TYPE_INCOME else -old_amount
+            apply_delta(old_account, -old_delta)
+        new_delta = instance.amount if instance.type == Transaction.TYPE_INCOME else -instance.amount
+        apply_delta(instance.account, new_delta)
+
+@receiver(post_delete, sender=Transaction)
+def transaction_post_delete(sender, instance, **kwargs):
+    delta = instance.amount if instance.type == Transaction.TYPE_INCOME else -instance.amount
+    acc = instance.account
+    acc.balance = (acc.balance or Decimal('0.00')) - Decimal(delta)
+    acc.save(update_fields=['balance'])
