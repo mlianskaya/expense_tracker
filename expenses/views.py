@@ -7,6 +7,11 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from .forms import CustomUserCreationForm
 from decimal import Decimal
+from django.views.generic import TemplateView
+from django.db.models import Sum
+from django.utils.timezone import now
+from dateutil.relativedelta import relativedelta
+import json
 
 # Кастомные представления для аутентификации
 class CustomLoginView(LoginView):
@@ -244,6 +249,76 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Category.objects.filter(owner=self.request.user)
+
+class AnalyticsView(LoginRequiredMixin, TemplateView):
+    template_name = "expenses/analytics.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        today = now().date()
+        month_start = today.replace(day=1)
+
+        # Все транзакции пользователя за текущий месяц
+        transactions = Transaction.objects.filter(
+            account__owner=user,
+            date__gte=month_start
+        )
+
+        # Сводка
+        context['total_income'] = transactions.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
+        context['total_expense'] = transactions.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
+        context['balance'] = context['total_income'] - context['total_expense']
+
+        # Разбивка по категориям
+        context['expense_by_category'] = list(
+            transactions.filter(type='expense')
+            .values('category__name')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')
+        )
+        context['income_by_category'] = list(
+            transactions.filter(type='income')
+            .values('category__name')
+            .annotate(total=Sum('amount'))
+            .order_by('-total')
+        )
+
+        # Динамика за последние 6 месяцев
+        last_6_months = [today.replace(day=1)]
+        for i in range(1, 6):
+            last_6_months.append(today.replace(day=1) - relativedelta(months=i))
+        last_6_months.reverse()
+
+        monthly_data = []
+        for month in last_6_months:
+            month_trans = Transaction.objects.filter(
+                account__owner=user,
+                date__year=month.year,
+                date__month=month.month
+            )
+            total_income = month_trans.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
+            total_expense = month_trans.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
+            monthly_data.append({
+                'month': month.strftime('%b %Y'),
+                'income': total_income,
+                'expense': total_expense
+            })
+        context['monthly_data'] = monthly_data
+
+        # Здесь преобразуем данные в JSON для Chart.js
+        context['expense_labels'] = json.dumps([e['category__name'] for e in context['expense_by_category']])
+        context['expense_data'] = json.dumps([float(e['total']) for e in context['expense_by_category']])
+
+        context['income_labels'] = json.dumps([e['category__name'] for e in context['income_by_category']])
+        context['income_data'] = json.dumps([float(e['total']) for e in context['income_by_category']])
+
+        context['months'] = json.dumps([m['month'] for m in context['monthly_data']])
+        context['monthly_income'] = json.dumps([float(m['income']) for m in context['monthly_data']])
+        context['monthly_expense'] = json.dumps([float(m['expense']) for m in context['monthly_data']])
+
+        return context
     
 # Home page
 def home(request):

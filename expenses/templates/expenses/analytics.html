@@ -1,0 +1,194 @@
+{% extends 'expenses/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Аналитика за {% now "F Y" %}</h2>
+    
+    <!-- Статистика карточками -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-success mb-3">
+                <div class="card-header bg-success-subtle text-success-emphasis">
+                    Доходы
+                </div>
+                <div class="card-body text-success">
+                    <h5 class="card-title">{{ total_income|floatformat:2 }} руб.</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-danger mb-3">
+                <div class="card-header bg-danger-subtle text-danger-emphasis">
+                    Расходы
+                </div>
+                <div class="card-body text-danger">
+                    <h5 class="card-title">{{ total_expense|floatformat:2 }} руб.</h5>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info mb-3">
+                <div class="card-header bg-info-subtle text-info-emphasis">
+                    Баланс за период
+                </div>
+                <div class="card-body text-info">
+                    <h5 class="card-title">{{ balance|floatformat:2 }} руб.</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Диаграммы -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Расходы по категориям</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="expensePie" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Доходы по категориям</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="incomePie" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Динамика за 6 месяцев</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyBar" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Преобразуем данные Django в JS-массивы
+    const expenseLabels = JSON.parse('{{ expense_labels|escapejs }}');
+    const expenseData = JSON.parse('{{ expense_data|escapejs }}');
+    
+    const incomeLabels = JSON.parse('{{ income_labels|escapejs }}');
+    const incomeData = JSON.parse('{{ income_data|escapejs }}');
+    
+    const months = JSON.parse('{{ months|escapejs }}');
+    const monthlyIncome = JSON.parse('{{ monthly_income|escapejs }}');
+    const monthlyExpense = JSON.parse('{{ monthly_expense|escapejs }}');
+    
+    // Расходы по категориям (Pie Chart)
+    const expenseCtx = document.getElementById('expensePie').getContext('2d');
+    new Chart(expenseCtx, {
+        type: 'pie',
+        data: {
+            labels: expenseLabels,
+            datasets: [{
+                data: expenseData,
+                backgroundColor: ['#ff6384','#36a2eb','#ffcd56','#4bc0c0','#9966ff','#ff9f40','#c9cbcf','#e7e9ed','#ff6384','#36a2eb']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Доходы по категориям (Pie Chart)
+    const incomeCtx = document.getElementById('incomePie').getContext('2d');
+    new Chart(incomeCtx, {
+        type: 'pie',
+        data: {
+            labels: incomeLabels,
+            datasets: [{
+                data: incomeData,
+                backgroundColor: ['#36a2eb','#ffcd56','#4bc0c0','#9966ff','#ff9f40','#ff6384','#c9cbcf','#e7e9ed','#36a2eb','#ffcd56']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+    
+    // Динамика по месяцам (Bar Chart)
+    const monthlyCtx = document.getElementById('monthlyBar').getContext('2d');
+    new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Доход',
+                    data: monthlyIncome,
+                    backgroundColor: '#36a2eb',
+                    borderColor: '#36a2eb',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Расход',
+                    data: monthlyExpense,
+                    backgroundColor: '#ff6384',
+                    borderColor: '#ff6384',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' руб.';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + context.parsed.y + ' руб.';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<!-- Добавьте стили -->
+<style>
+    .card {
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: none;
+    }
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e3e6f0;
+    }
+</style>
+{% endblock %}
