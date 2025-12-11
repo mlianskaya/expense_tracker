@@ -22,12 +22,29 @@
                     <br>
                     Родитель: {{ category.parent.name|default:"-" }}
                 </p>
+
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{% url 'expenses:category_edit' category.pk %}" class="btn btn-sm btn-primary">
+                        Редактировать
+                    </a>
+
+                    <form action="{% url 'expenses:category_delete' category.pk %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Удалить категорию «{{ category.name }}»?')">
+                            Удалить
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
     {% empty %}
     <div class="col-12">
-        <div class="alert alert-info">У вас пока нет категорий. <a href="{% url 'expenses:category_add' %}">Создайте первую категорию</a></div>
+        <div class="alert alert-info">У вас пока нет категорий. 
+            <a href="{% url 'expenses:category_add' %}">Создайте первую категорию</a>
+        </div>
     </div>
     {% endfor %}
 </div>
