@@ -51,9 +51,12 @@
                         <span class="navbar-text welcome-text">
                             Привет, <strong>{{ user.username }}</strong>!
                         </span>
-                        <a class="nav-link" href="{% url 'expenses:logout' %}">
-                            🚪 Выйти
-                        </a>
+                        <form method="post" action="{% url 'expenses:logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="nav-link btn btn-link p-0 border-0 bg-transparent text-white">
+                                🚪 Выйти
+                            </button>
+                        </form>
                     {% else %}
                         <!-- Меню для гостей -->
                         <a class="nav-link" href="{% url 'expenses:login' %}">
@@ -75,12 +78,6 @@
         {% endblock %}
     </main>
 
-    <!-- Футер -->
-    <footer class="bg-dark text-light py-4 mt-5">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2025 Expense Tracker. Личный бюджет под контролем.</p>
-        </div>
-    </footer>
 
     <!-- Подключение Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

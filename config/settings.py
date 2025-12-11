@@ -101,9 +101,8 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Login redirects
-LOGIN_REDIRECT_URL = '/'  # После входа перенаправлять на главную
-LOGOUT_REDIRECT_URL = '/'  # После выхода перенаправлять на главную
+LOGIN_REDIRECT_URL = 'expenses:home'      # После входа на главную
+LOGOUT_REDIRECT_URL = 'expenses:login'   # После выхода на страницу логина
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

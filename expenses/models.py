@@ -37,7 +37,7 @@ class Category(models.Model):
         unique_together = ('owner', 'name', 'type')
         ordering = ['name']
 
-    def str(self):
+    def __str__(self):
         return self.name
     
 class Transaction(models.Model):
