@@ -51,10 +51,26 @@ class Transaction(models.Model):
         (TYPE_EXPENSE, 'Expense'),
     ]
 
-    account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='transactions')
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='transactions')
-    amount = models.DecimalField(max_digits=12, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    account = models.ForeignKey(
+        Account,
+        on_delete=models.CASCADE,
+        related_name='transactions'
+    )
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='transactions'
+    )
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))]
+    )
+    type = models.CharField(
+        max_length=10,
+        choices=TYPE_CHOICES
+    )
     date = models.DateField(default=timezone.now)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -66,8 +82,7 @@ class Transaction(models.Model):
         return f"{self.date} — {self.amount} {self.account.currency}"
 
     def clean(self):
-        if self.category and self.category.type != self.type:
-            raise ValidationError("Тип транзакции должен соответствовать типу категории.")
+        return super().clean()
 
 
 class Budget(models.Model):
