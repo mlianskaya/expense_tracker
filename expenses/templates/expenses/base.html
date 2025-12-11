@@ -20,7 +20,7 @@
         <div class="container">
             <!-- Бренд и переключатель для мобильных -->
             <a class="navbar-brand" href="{% url 'expenses:home' %}">
-                💰 Expense Tracker
+                Expense Tracker
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -33,13 +33,13 @@
                     {% if user.is_authenticated %}
                         <!-- Меню для авторизованных пользователей -->
                         <a class="nav-link" href="{% url 'expenses:account_list' %}">
-                            📁 Счета
+                            Счета
                         </a>
                         <a class="nav-link" href="{% url 'expenses:transaction_list' %}">
-                            💳 Транзакции
+                            Транзакции
                         </a>
                         <a class="nav-link" href="{% url 'expenses:category_list' %}">
-                            📂 Категории
+                            Категории
                         </a>
                     {% endif %}
                 </div>
@@ -54,16 +54,16 @@
                         <form method="post" action="{% url 'expenses:logout' %}" class="d-inline">
                             {% csrf_token %}
                             <button type="submit" class="nav-link btn btn-link p-0 border-0 bg-transparent text-white">
-                                🚪 Выйти
+                                Выйти
                             </button>
                         </form>
                     {% else %}
                         <!-- Меню для гостей -->
                         <a class="nav-link" href="{% url 'expenses:login' %}">
-                            🔑 Войти
+                            Войти
                         </a>
                         <a class="nav-link" href="{% url 'expenses:register' %}">
-                            📝 Регистрация
+                            Регистрация
                         </a>
                     {% endif %}
                 </div>
