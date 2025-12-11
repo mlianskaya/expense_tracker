@@ -44,6 +44,25 @@ class AccountCreateView(LoginRequiredMixin, CreateView):
         form.instance.owner = self.request.user
         return super().form_valid(form)
 
+class AccountUpdateView(LoginRequiredMixin, UpdateView):
+    model = Account
+    fields = ['name', 'currency', 'balance']
+    template_name = 'expenses/account_form.html'
+    success_url = reverse_lazy('expenses:account_list')
+
+    def get_queryset(self):
+        # Чтобы пользователь не редактировал чужие счета
+        return Account.objects.filter(owner=self.request.user)
+
+
+class AccountDeleteView(LoginRequiredMixin, DeleteView):
+    model = Account
+    template_name = 'expenses/account_confirm_delete.html'
+    success_url = reverse_lazy('expenses:account_list')
+
+    def get_queryset(self):
+        return Account.objects.filter(owner=self.request.user)
+    
 # Transaction Views
 class TransactionListView(LoginRequiredMixin, ListView):
     model = Transaction
