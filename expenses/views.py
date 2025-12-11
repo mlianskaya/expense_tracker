@@ -257,18 +257,21 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 
 class BudgetCreateView(LoginRequiredMixin, CreateView):
     model = Budget
-    fields = ['category', 'period_start', 'limit_amount']
+    fields = ['period_start', 'limit_amount']  # УБРАЛИ category
     template_name = 'expenses/budget_form.html'
     success_url = reverse_lazy('expenses:category_list')
 
-    def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields['category'].queryset = Category.objects.filter(owner=self.request.user)
-        return form
-
     def form_valid(self, form):
         form.instance.owner = self.request.user
+        form.instance.category_id = self.request.GET.get('category')  # Из URL ?category=2
         return super().form_valid(form)
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['period_start'].widget.attrs.update({'class': 'form-control'})
+        form.fields['limit_amount'].widget.attrs.update({'class': 'form-control'})
+        return form
+
 
 class BudgetListView(LoginRequiredMixin, ListView):
     model = Budget
@@ -292,6 +295,15 @@ class BudgetUpdateView(LoginRequiredMixin, UpdateView):
         form.fields['period_start'].widget.attrs.update({'class': 'form-control'})
         form.fields['limit_amount'].widget.attrs.update({'class': 'form-control'})
         return form
+
+class BudgetDeleteView(LoginRequiredMixin, DeleteView):
+    model = Budget
+    template_name = 'expenses/budget_confirm_delete.html'
+    success_url = reverse_lazy('expenses:category_list')
+
+    def get_queryset(self):
+        return Budget.objects.filter(owner=self.request.user)
+
 
 # Home page
 def home(request):

@@ -16,7 +16,6 @@
                     Родитель: {{ category.parent.name|default:"-" }}
                 </p>
 
-                <!-- ПРОСТОЙ БЮДЖЕТ БЕЗ ФИЛЬТРОВ -->
                 <div class="budget-info mb-3 p-3 bg-light rounded">
                     {% for budget in category.budgets.all|slice:"1" %}
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -24,7 +23,7 @@
                                 {{ budget.spent_amount }} / {{ budget.limit_amount }}
                             </span>
                             {% if budget.is_over_limit %}
-                                <span class="badge bg-danger">🚨 превышен</span>
+                                <span class="badge bg-danger">превышен</span>
                             {% endif %}
                         </div>
                         <small class="text-muted d-block mb-2">
@@ -39,6 +38,7 @@
                         </div>
                         <div class="d-flex gap-2">
                             <a href="{% url 'expenses:budget_edit' budget.pk %}" class="btn btn-sm btn-primary">Изменить</a>
+                            <a href="{% url 'expenses:budget_delete' budget.pk %}" class="btn btn-sm btn-danger">Удалить</a>
                         </div>
                     {% empty %}
                         <small class="text-muted">нет бюджета</small>

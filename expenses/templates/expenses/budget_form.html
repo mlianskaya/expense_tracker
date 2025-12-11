@@ -1,6 +1,9 @@
 {% extends 'expenses/base.html' %}
 
 {% block content %}
+{% if category_name %}
+    {% with category_name=category_name %}
+{% endif %}
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-6">
@@ -13,9 +16,8 @@
                         {% csrf_token %}
 
                         <div class="mb-3">
-                            <label class="form-label">Категория *</label>
-                            {{ form.category }}
-                            <div class="form-text">Выберите категорию для бюджета</div>
+                            <label class="form-label">Категория</label>
+                            <input type="text" class="form-control" value="{{ category_name|default:'Выберите из категории' }}" readonly>
                         </div>
 
                         <div class="mb-3">
