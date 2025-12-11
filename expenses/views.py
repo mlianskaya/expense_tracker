@@ -159,7 +159,7 @@ class CategoryListView(LoginRequiredMixin, ListView):
 
 class CategoryCreateView(LoginRequiredMixin, CreateView):
     model = Category
-    fields = ['name', 'type', 'parent']
+    fields = ['name', 'parent']
     template_name = 'expenses/category_form.html'
     success_url = reverse_lazy('expenses:category_list')
 
@@ -174,20 +174,21 @@ class CategoryCreateView(LoginRequiredMixin, CreateView):
     
 class CategoryUpdateView(LoginRequiredMixin, UpdateView):
     model = Category
-    fields = ['name', 'type', 'parent']
+    fields = ['name', 'parent']
     template_name = 'expenses/category_form.html'
     success_url = reverse_lazy('expenses:category_list')
 
     def get_queryset(self):
-        # запрещаем правку чужих категорий
         return Category.objects.filter(owner=self.request.user)
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # нельзя выбрать в качестве родителя саму категорию
-        form.fields['parent'].queryset = Category.objects.filter(owner=self.request.user).exclude(pk=self.object.pk)
+        form.fields['parent'].queryset = (
+            Category.objects
+            .filter(owner=self.request.user)
+            .exclude(pk=self.object.pk)
+        )
         return form
-
 
 class CategoryDeleteView(LoginRequiredMixin, DeleteView):
     model = Category
@@ -195,7 +196,6 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('expenses:category_list')
 
     def get_queryset(self):
-        # запрещаем удаление чужих категорий
         return Category.objects.filter(owner=self.request.user)
     
 # Home page

@@ -12,14 +12,8 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">{{ category.name }}</h5>
+
                 <p class="card-text">
-                    Тип: 
-                    {% if category.type == 'income' %}
-                        <span class="badge bg-success">Доход</span>
-                    {% else %}
-                        <span class="badge bg-danger">Расход</span>
-                    {% endif %}
-                    <br>
                     Родитель: {{ category.parent.name|default:"-" }}
                 </p>
 
@@ -32,13 +26,13 @@
                         Удалить
                     </a>
                 </div>
-
             </div>
         </div>
     </div>
     {% empty %}
     <div class="col-12">
-        <div class="alert alert-info">У вас пока нет категорий. 
+        <div class="alert alert-info">
+            У вас пока нет категорий. 
             <a href="{% url 'expenses:category_add' %}">Создайте первую категорию</a>
         </div>
     </div>

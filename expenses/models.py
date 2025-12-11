@@ -21,25 +21,27 @@ class Account(models.Model):
         return f"{self.name} ({self.currency})"
 
 class Category(models.Model):
-    TYPE_INCOME = 'income'
-    TYPE_EXPENSE = 'expense'
-    TYPE_CHOICES = [
-        (TYPE_INCOME, 'Income'),
-        (TYPE_EXPENSE, 'Expense'),
-    ]
-
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='categories')
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='categories'
+    )
     name = models.CharField(max_length=120)
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
-    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='children')
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='children'
+    )
 
     class Meta:
-        unique_together = ('owner', 'name', 'type')
+        unique_together = ('owner', 'name')
         ordering = ['name']
 
     def __str__(self):
         return self.name
-    
+
 class Transaction(models.Model):
     TYPE_INCOME = 'income'
     TYPE_EXPENSE = 'expense'

@@ -9,8 +9,8 @@ class AccountAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner', 'type', 'parent')
-    list_filter = ('type',)
+    list_display = ('name', 'owner', 'parent')   
+    list_filter = ('owner',)                     
     search_fields = ('name',)
 
 @admin.register(Transaction)
