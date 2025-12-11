@@ -7,24 +7,52 @@
 </div>
 
 <div class="row">
-    {% for category in category_list %}
+    {% for category in object_list %}
     <div class="col-md-4 mb-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">{{ category.name }}</h5>
-
                 <p class="card-text">
                     Родитель: {{ category.parent.name|default:"-" }}
                 </p>
 
-                <div class="d-flex gap-2 mt-3">
-                    <a href="{% url 'expenses:category_edit' category.pk %}" class="btn btn-sm btn-primary">
-                        Редактировать
-                    </a>
+                <!-- ПРОСТОЙ БЮДЖЕТ БЕЗ ФИЛЬТРОВ -->
+                <div class="budget-info mb-3 p-3 bg-light rounded">
+                    {% for budget in category.budgets.all|slice:"1" %}
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-info fs-6">
+                                {{ budget.spent_amount }} / {{ budget.limit_amount }}
+                            </span>
+                            {% if budget.is_over_limit %}
+                                <span class="badge bg-danger">🚨 превышен</span>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted d-block mb-2">
+                            Осталось: {{ budget.remaining_amount }}
+                        </small>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar" role="progressbar"
+                                 style="width: {{ budget.progress_percent }}%"
+                                 aria-valuenow="{{ budget.progress_percent }}"
+                                 aria-valuemin="0" aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'expenses:budget_edit' budget.pk %}" class="btn btn-sm btn-primary">Изменить</a>
+                        </div>
+                    {% empty %}
+                        <small class="text-muted">нет бюджета</small>
+                        <a href="{% url 'expenses:budget_add' %}?category={{ category.pk }}" class="btn btn-sm btn-outline-primary mt-2">📊 Установить</a>
+                    {% endfor %}
+                </div>
 
-                    <a href="{% url 'expenses:category_delete' category.pk %}" class="btn btn-sm btn-danger">
-                        Удалить
-                    </a>
+
+
+                <div class="d-flex gap-2">
+                    <a href="{% url 'expenses:category_edit' category.pk %}"
+                       class="btn btn-sm btn-primary">Редактировать</a>
+                    <a href="{% url 'expenses:category_delete' category.pk %}"
+                       class="btn btn-sm btn-danger">Удалить</a>
                 </div>
             </div>
         </div>
@@ -32,10 +60,10 @@
     {% empty %}
     <div class="col-12">
         <div class="alert alert-info">
-            У вас пока нет категорий. 
+            У вас пока нет категорий.
             <a href="{% url 'expenses:category_add' %}">Создайте первую категорию</a>
         </div>
     </div>
-    {% endfor %}
+{% endfor %}
 </div>
 {% endblock %}

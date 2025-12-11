@@ -1,0 +1,43 @@
+{% extends 'expenses/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3>{% if form.instance.pk %}Редактировать{% else %}Создать{% endif %} бюджет</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Категория *</label>
+                            {{ form.category }}
+                            <div class="form-text">Выберите категорию для бюджета</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Дата начала периода *</label>
+                            {{ form.period_start }}
+                            <div class="form-text">Например: 2025-12-01 (1-е число месяца)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Лимит *</label>
+                            {{ form.limit_amount }}
+                            <div class="form-text">Сумма, которую планируете потратить</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">Сохранить</button>
+                            <a href="{% url 'expenses:category_list' %}" class="btn btn-secondary">Отмена</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Account, Category, Transaction, Budget
@@ -151,11 +152,20 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
 
 # Category Views
 class CategoryListView(LoginRequiredMixin, ListView):
+
     model = Category
     template_name = 'expenses/category_list.html'
+    context_object_name = 'category_list'  # чтобы работало category_list в шаблоне
 
     def get_queryset(self):
         return Category.objects.filter(owner=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Добавляем текущий месяц для фильтрации бюджетов
+        context['now'] = timezone.now()
+        return context
+
 
 class CategoryCreateView(LoginRequiredMixin, CreateView):
     model = Category
@@ -197,7 +207,45 @@ class CategoryDeleteView(LoginRequiredMixin, DeleteView):
 
     def get_queryset(self):
         return Category.objects.filter(owner=self.request.user)
-    
+
+class BudgetCreateView(LoginRequiredMixin, CreateView):
+    model = Budget
+    fields = ['category', 'period_start', 'limit_amount']
+    template_name = 'expenses/budget_form.html'
+    success_url = reverse_lazy('expenses:category_list')
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['category'].queryset = Category.objects.filter(owner=self.request.user)
+        return form
+
+    def form_valid(self, form):
+        form.instance.owner = self.request.user
+        return super().form_valid(form)
+
+class BudgetListView(LoginRequiredMixin, ListView):
+    model = Budget
+    template_name = 'expenses/budget_list.html'
+    context_object_name = 'budgets'
+
+    def get_queryset(self):
+        return Budget.objects.filter(owner=self.request.user).select_related('category')
+
+class BudgetUpdateView(LoginRequiredMixin, UpdateView):
+    model = Budget
+    fields = ['period_start', 'limit_amount']
+    template_name = 'expenses/budget_form.html'
+    success_url = reverse_lazy('expenses:category_list')
+
+    def get_queryset(self):
+        return Budget.objects.filter(owner=self.request.user)
+
+    def get_form(self):
+        form = super().get_form()
+        form.fields['period_start'].widget.attrs.update({'class': 'form-control'})
+        form.fields['limit_amount'].widget.attrs.update({'class': 'form-control'})
+        return form
+
 # Home page
 def home(request):
     return render(request, 'expenses/home.html')

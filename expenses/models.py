@@ -4,6 +4,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.db.models import Sum
 
 User = settings.AUTH_USER_MODEL
 
@@ -79,8 +80,37 @@ class Budget(models.Model):
         unique_together = ('owner', 'category', 'period_start')
         ordering = ['-period_start']
 
-    def str(self):
+    def __str__(self):
         return f"{self.category.name} — {self.period_start:%Y-%m} — {self.limit_amount}"
+
+    @property
+    def spent_amount(self):
+        """Сумма расходов по категории за период бюджета"""
+        period_end = self.period_start.replace(day=28) + timezone.timedelta(days=4)
+        period_end = period_end.replace(day=1) - timezone.timedelta(days=1)
+
+        total = Transaction.objects.filter(
+            category=self.category,
+            type=Transaction.TYPE_EXPENSE,
+            date__range=[self.period_start, period_end]
+        ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+        return total
+
+    @property
+    def remaining_amount(self):
+        return max(Decimal('0.00'), self.limit_amount - self.spent_amount)
+
+    @property
+    def is_over_limit(self):
+        return self.spent_amount > self.limit_amount
+
+    @property
+    def progress_percent(self):
+        if self.limit_amount == 0:
+            return 0
+        return min(100, (self.spent_amount / self.limit_amount * 100))
+
+
 
 # Сигналы для автоматического обновления баланса
 from django.db.models.signals import pre_save, post_save, post_delete
