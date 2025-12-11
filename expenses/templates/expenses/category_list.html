@@ -28,13 +28,9 @@
                         Редактировать
                     </a>
 
-                    <form action="{% url 'expenses:category_delete' category.pk %}" method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger"
-                                onclick="return confirm('Удалить категорию «{{ category.name }}»?')">
-                            Удалить
-                        </button>
-                    </form>
+                    <a href="{% url 'expenses:category_delete' category.pk %}" class="btn btn-sm btn-danger">
+                        Удалить
+                    </a>
                 </div>
 
             </div>

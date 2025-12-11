@@ -33,8 +33,8 @@
             </td>
             <td>{{ transaction.description|default:"-" }}</td>
             <td>
-                <a href="{% url 'expenses:transaction_edit' transaction.pk %}" class="btn btn-sm btn-primary">✏️ Редактировать</a>
-                <a href="{% url 'expenses:transaction_delete' transaction.pk %}" class="btn btn-sm btn-danger">🗑️ Удалить</a>
+                <a href="{% url 'expenses:transaction_edit' transaction.pk %}" class="btn btn-sm btn-primary">Редактировать</a>
+                <a href="{% url 'expenses:transaction_delete' transaction.pk %}" class="btn btn-sm btn-danger">Удалить</a>
             </td>
         </tr>
         {% empty %}
