@@ -71,7 +71,54 @@ class TransactionListView(LoginRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Transaction.objects.filter(account__owner=self.request.user).order_by('-date')
+        qs = Transaction.objects.filter(
+            account__owner=self.request.user
+        ).order_by('-date')
+
+        # --- фильтр по дате "от" ---
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            qs = qs.filter(date__gte=date_from)
+
+        # --- фильтр по дате "до" ---
+        date_to = self.request.GET.get('date_to')
+        if date_to:
+            qs = qs.filter(date__lte=date_to)
+
+        # --- фильтр по категории ---
+        category = self.request.GET.get('category')
+        if category:
+            qs = qs.filter(category_id=category)
+
+        # --- фильтр по счёту ---
+        account = self.request.GET.get('account')
+        if account:
+            qs = qs.filter(account_id=account)
+
+        # --- фильтр по типу ---
+        tr_type = self.request.GET.get('type')
+        if tr_type in ['income', 'expense']:
+            qs = qs.filter(type=tr_type)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        # данные для выпадающих списков
+        context['categories'] = Category.objects.filter(owner=user)
+        context['accounts'] = Account.objects.filter(owner=user)
+
+        # сохраняем значения фильтров в форме
+        context['selected'] = {
+            'date_from': self.request.GET.get('date_from', ''),
+            'date_to': self.request.GET.get('date_to', ''),
+            'category': self.request.GET.get('category', ''),
+            'account': self.request.GET.get('account', ''),
+            'type': self.request.GET.get('type', ''),
+        }
+        return context
 
 class TransactionCreateView(LoginRequiredMixin, CreateView):
     model = Transaction
