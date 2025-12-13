@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Account, Category, Transaction, Budget
 from django.contrib.auth import login, authenticate
@@ -12,9 +13,9 @@ from django.views.generic import TemplateView
 from django.db.models import Sum
 from django.utils.timezone import now
 from dateutil.relativedelta import relativedelta
+from django.shortcuts import get_object_or_404
 import json
 
-# Кастомные представления для аутентификации
 class CustomLoginView(LoginView):
     template_name = 'expenses/login.html'
     redirect_authenticated_user = True
@@ -156,43 +157,34 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
         return form
 
     def form_valid(self, form):
-        # 1. Берем старую транзакцию из БД ДО сохранения
         old_tx = Transaction.objects.get(pk=self.object.pk)
 
-        # 2. Сохраняем ссылку на оригинальный обработчик сигнала
         from .models import transaction_post_save  # импорт функции сигнала
         post_save.disconnect(transaction_post_save, sender=Transaction)
 
-        # 3. Сохраняем новую версию транзакции (без срабатывания сигнала)
         response = super().form_valid(form)
         new_tx = self.object  # уже сохраненная транзакция
 
-        # 4. Считаем дельту по старой и новой транзакции и обновляем баланс
         def delta_for(tx):
             return tx.amount if tx.type == Transaction.TYPE_INCOME else -tx.amount
 
-        # если счет изменился, нужно поправить оба
         if old_tx.account_id == new_tx.account_id:
             # один и тот же счет
             account = new_tx.account
             account.balance = (account.balance or Decimal('0.00')) - delta_for(old_tx) + delta_for(new_tx)
             account.save(update_fields=['balance'])
         else:
-            # старый счет: вычесть старую транзакцию
             old_acc = old_tx.account
             old_acc.balance = (old_acc.balance or Decimal('0.00')) - delta_for(old_tx)
             old_acc.save(update_fields=['balance'])
 
-            # новый счет: добавить новую транзакцию
             new_acc = new_tx.account
             new_acc.balance = (new_acc.balance or Decimal('0.00')) + delta_for(new_tx)
             new_acc.save(update_fields=['balance'])
 
-        # 5. Включаем сигнал обратно
         post_save.connect(transaction_post_save, sender=Transaction)
 
         return response
-
 
 class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     model = Transaction
@@ -202,19 +194,30 @@ class TransactionDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return Transaction.objects.filter(account__owner=self.request.user)
 
+class TransactionDetailView(LoginRequiredMixin, DetailView):
+    model = Transaction
+    template_name = 'expenses/transaction_detail.html'
+    context_object_name = 'transaction'
+
+    def get_object(self):
+        return get_object_or_404(
+            Transaction,
+            pk=self.kwargs['pk'],
+            account__owner=self.request.user
+        )
+
 # Category Views
 class CategoryListView(LoginRequiredMixin, ListView):
 
     model = Category
     template_name = 'expenses/category_list.html'
-    context_object_name = 'category_list'  # чтобы работало category_list в шаблоне
+    context_object_name = 'category_list'  
 
     def get_queryset(self):
         return Category.objects.filter(owner=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Добавляем текущий месяц для фильтрации бюджетов
         context['now'] = timezone.now()
         return context
 
@@ -320,18 +323,15 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
         today = now().date()
         month_start = today.replace(day=1)
 
-        # Все транзакции пользователя за текущий месяц
         transactions = Transaction.objects.filter(
             account__owner=user,
             date__gte=month_start
         )
 
-        # Сводка
         context['total_income'] = transactions.filter(type='income').aggregate(Sum('amount'))['amount__sum'] or 0
         context['total_expense'] = transactions.filter(type='expense').aggregate(Sum('amount'))['amount__sum'] or 0
         context['balance'] = context['total_income'] - context['total_expense']
 
-        # Разбивка по категориям
         context['expense_by_category'] = list(
             transactions.filter(type='expense')
             .values('category__name')
@@ -345,7 +345,6 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
             .order_by('-total')
         )
 
-        # Динамика за последние 6 месяцев
         last_6_months = [today.replace(day=1)]
         for i in range(1, 6):
             last_6_months.append(today.replace(day=1) - relativedelta(months=i))
@@ -367,7 +366,6 @@ class AnalyticsView(LoginRequiredMixin, TemplateView):
             })
         context['monthly_data'] = monthly_data
 
-        # Здесь преобразуем данные в JSON для Chart.js
         context['expense_labels'] = json.dumps([e['category__name'] for e in context['expense_by_category']])
         context['expense_data'] = json.dumps([float(e['total']) for e in context['expense_by_category']])
 

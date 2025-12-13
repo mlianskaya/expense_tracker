@@ -47,8 +47,8 @@ class Transaction(models.Model):
     TYPE_INCOME = 'income'
     TYPE_EXPENSE = 'expense'
     TYPE_CHOICES = [
-        (TYPE_INCOME, 'Income'),
-        (TYPE_EXPENSE, 'Expense'),
+        (TYPE_INCOME, 'Доход'),
+        (TYPE_EXPENSE, 'Расход'),
     ]
 
     account = models.ForeignKey(
@@ -100,7 +100,6 @@ class Budget(models.Model):
 
     @property
     def spent_amount(self):
-        """Сумма расходов по категории за период бюджета"""
         period_end = self.period_start.replace(day=28) + timezone.timedelta(days=4)
         period_end = period_end.replace(day=1) - timezone.timedelta(days=1)
 
@@ -127,7 +126,6 @@ class Budget(models.Model):
 
 
 
-# Сигналы для автоматического обновления баланса
 from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 

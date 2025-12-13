@@ -22,6 +22,7 @@ urlpatterns = [
     path('transactions/add/', views.TransactionCreateView.as_view(), name='transaction_add'),
     path('transactions/<int:pk>/edit/', views.TransactionUpdateView.as_view(), name='transaction_edit'),
     path('transactions/<int:pk>/delete/', views.TransactionDeleteView.as_view(), name='transaction_delete'),
+    path('transactions/<int:pk>/', views.TransactionDetailView.as_view(), name='transaction_detail'),
     path('categories/', views.CategoryListView.as_view(), name='category_list'),
     path('categories/add/', views.CategoryCreateView.as_view(), name='category_add'),
     path('categories/<int:pk>/edit/', views.CategoryUpdateView.as_view(), name='category_edit'),
