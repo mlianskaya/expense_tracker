@@ -3,8 +3,7 @@
 {% block content %}
 <div class="container mt-4">
     <h2>Аналитика за {% now "F Y" %}</h2>
-    
-    <!-- Статистика карточками -->
+
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card border-success mb-3">
@@ -39,7 +38,6 @@
     </div>
     
     <div class="row">
-        <!-- Диаграммы -->
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-header">
@@ -79,7 +77,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Преобразуем данные Django в JS-массивы
     const expenseLabels = JSON.parse('{{ expense_labels|escapejs }}');
     const expenseData = JSON.parse('{{ expense_data|escapejs }}');
     
@@ -89,8 +86,7 @@
     const months = JSON.parse('{{ months|escapejs }}');
     const monthlyIncome = JSON.parse('{{ monthly_income|escapejs }}');
     const monthlyExpense = JSON.parse('{{ monthly_expense|escapejs }}');
-    
-    // Расходы по категориям (Pie Chart)
+
     const expenseCtx = document.getElementById('expensePie').getContext('2d');
     new Chart(expenseCtx, {
         type: 'pie',
@@ -110,8 +106,7 @@
             }
         }
     });
-    
-    // Доходы по категориям (Pie Chart)
+
     const incomeCtx = document.getElementById('incomePie').getContext('2d');
     new Chart(incomeCtx, {
         type: 'pie',
@@ -131,8 +126,7 @@
             }
         }
     });
-    
-    // Динамика по месяцам (Bar Chart)
+
     const monthlyCtx = document.getElementById('monthlyBar').getContext('2d');
     new Chart(monthlyCtx, {
         type: 'bar',
@@ -180,7 +174,6 @@
     });
 </script>
 
-<!-- Добавьте стили -->
 <style>
     .card {
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);

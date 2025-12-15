@@ -147,7 +147,6 @@ def transaction_pre_save(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def transaction_post_save(sender, instance, created, **kwargs):
-    # Пропускаем создание (там логика уже правильная)
     if created:
         delta = instance.amount if instance.type == Transaction.TYPE_INCOME else -instance.amount
         account_obj = instance.account
@@ -155,21 +154,17 @@ def transaction_post_save(sender, instance, created, **kwargs):
         account_obj.save(update_fields=['balance'])
         return
 
-    # Для обновления — проверяем, есть ли старые данные
     old_amount = getattr(instance, '_pre_save_old_amount', None)
     old_type = getattr(instance, '_pre_save_old_type', None)
     old_account = getattr(instance, '_pre_save_old_account', None)
 
-    # Если НЕТ старых данных (первый save при update), ничего не делаем
     if old_amount is None or old_type is None or old_account is None:
         return
 
-    # Вычитаем старый эффект
     old_delta = old_amount if old_type == Transaction.TYPE_INCOME else -old_amount
     old_account.balance = (old_account.balance or Decimal('0.00')) - Decimal(old_delta)
     old_account.save(update_fields=['balance'])
 
-    # Добавляем новый эффект
     new_delta = instance.amount if instance.type == Transaction.TYPE_INCOME else -instance.amount
     instance.account.balance = (instance.account.balance or Decimal('0.00')) + Decimal(new_delta)
     instance.account.save(update_fields=['balance'])

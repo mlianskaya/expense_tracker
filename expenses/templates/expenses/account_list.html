@@ -24,7 +24,6 @@
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'expenses:account_edit' account.pk %}" class="btn btn-sm btn-outline-primary">Редактировать</a>
 
-                    <!-- Кнопка "Удалить" ведёт на страницу подтверждения -->
                     <a href="{% url 'expenses:account_delete' account.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
                 </div>
             </div>
